@@ -1,0 +1,75 @@
+# S.H.I.E.L.D policy. Deterministic rules enforced outside the model.
+#
+# This file is hashed (policy_hash) and the hash is re-checked before every
+# tool call. Editing it mid-run denies all calls and raises POLICY_TAMPERED.
+#
+# Default is deny: a tool that is not listed here cannot be called by anyone.
+
+version: "1.1.0"
+default: deny
+
+tools:
+  query_transactions:
+    tier: read
+    args_schema:
+      account_id: "^ACCT-\\d{4}$"
+      days: {min: 1, max: 90}
+    field_trust:
+      default: trusted
+      description: untrusted      # free text written by whoever sent the money
+
+  read_case_notes:
+    tier: read
+    args_schema:
+      account_id: "^ACCT-\\d{4}$"
+      limit: {min: 1, max: 20}
+    field_trust:
+      default: trusted
+      body: untrusted             # free text, the classic injection carrier
+
+  set_account_status:
+    tier: write
+    callers: [executor]           # no worker and no supervisor, ever
+    args_schema:
+      account_id: "^ACCT-\\d{4}$"
+      action: "^(FREEZE|UNFREEZE)$"
+      idempotency_key: "^[0-9a-f]{64}$"
+
+roles:
+  transaction_analyst:
+    tools: [query_transactions]
+    budget: {calls: 10, tokens: 20000, seconds: 120}
+  counterparty_analyst:
+    tools: [query_transactions]
+    budget: {calls: 10, tokens: 20000, seconds: 120}
+  notes_reviewer:
+    tools: [read_case_notes]
+    budget: {calls: 6, tokens: 15000, seconds: 90}
+
+global_budget: {calls: 30, tokens: 60000, seconds: 400}
+
+actions:
+  FREEZE:
+    requires_approval: true
+    approval_ttl_seconds: 600
+    threshold:                        # recomputed by the executor from TRUSTED fields only
+      min_inbound_from_new_accounts: 3   # counterparties opened < 30 days ago
+      min_total_inbound: 300000
+      max_hours_inbound_to_outbound: 48
+    target_must_be: [case_subject, trusted_counterparty]
+    min_independent_sources: 2        # optional check (Phase 6)
+  UNFREEZE:
+    requires_approval: true
+
+idempotency:
+  key_fields: [case_id, action, target]
+  canonicalize_target:
+    upper: true
+    strip: true
+    normalize_unicode_hyphens: true
+
+trust:
+  origin_rule: first_entry            # trust follows where a value first entered, never where it is stored now
+
+escalation:
+  triggers: [UNRESOLVED_CONFLICT, MALFORMED_OUTPUT_REPEATED, UNEXPECTED_ERROR, POLICY_TAMPERED]

@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shield"
+version = "1.2.0"
+description = "S.H.I.E.L.D - a governed multi-agent investigation system with secure tool use"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+dependencies = [
+    "pydantic>=2.6",
+    "PyYAML>=6.0",
+    "typer>=0.12",
+    "rich>=13.7",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+live = ["openai>=1.30"]
+ui = ["streamlit>=1.49"]
+dev = ["pytest>=8.0", "pytest-timeout>=2.3", "hypothesis>=6.100"]
+
+[project.scripts]
+shield = "cli.main:app"
+
+[tool.setuptools]
+packages = ["policy", "core", "tools", "agents", "data", "harness", "ui", "cli"]
+
+[tool.setuptools.package-data]
+policy = ["*.yaml"]
+agents = ["prompts/*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+    "scenario: end-to-end demo scenario test",
+    "live: requires a live LLM provider (skipped by default)",
+]
+timeout = 120

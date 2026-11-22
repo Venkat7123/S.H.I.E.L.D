@@ -1,0 +1,23 @@
+# Normalise every text file to LF, in the repository and in the working tree.
+#
+# This matters more here than in most projects: `policy_hash` is a SHA-256 over
+# the bytes of policy/policy.yaml, and the gateway re-checks it before every
+# tool call. A Windows checkout that rewrote LF to CRLF would change those
+# bytes. policy/loader.py already normalises line endings before hashing, so
+# the hash is stable either way - this is the second line of that defence, and
+# it keeps a clone byte-identical across platforms.
+* text=auto eol=lf
+
+*.py    text eol=lf
+*.md    text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.toml  text eol=lf
+*.cfg   text eol=lf
+*.txt   text eol=lf
+*.jsonl text eol=lf
+
+# Never touched by line-ending conversion.
+*.db    binary
+*.png   binary
+*.jpg   binary

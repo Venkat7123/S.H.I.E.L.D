@@ -1,0 +1,51 @@
+# Secrets. .env.example is committed; real .env files never are.
+.env
+.env.*
+!.env.example
+
+# Kept local, never published: the source specification, the skills that
+# governed work on the codebase, the internal build log and the presentation
+# script. They live on disk; they are not part of the public repository.
+SHIELD_NEW_PRD.md
+skills/
+docs/progress.md
+docs/demo_script.md
+
+# Environments
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+
+# Test and tooling caches
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Runtime artefacts. A run's database and logs are outputs, not source:
+# `shield seed` recreates them from data/seed.py deterministically.
+data/*.db
+data/*.db-wal
+data/*.db-shm
+data/*.db-journal
+logs/*.jsonl
+logs/*.log
+raw_store/
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
